@@ -1,10 +1,12 @@
 const express = require('express');
+require('dotenv').config();
+const cors = require('cors');
 const usersRouter = require('./routes/users')
 
 class Server  {
     constructor(){
         this.app = express();
-        this.port = 3000;
+        this.port = process.env.PORT;
 
         // Paths
         this.basePath = '/api/v1';
@@ -15,6 +17,7 @@ class Server  {
     }
 
     middlewares(){
+        this.app.use(cors());
         this.app.use(express.json());
     }
 
@@ -23,7 +26,7 @@ class Server  {
     }
     listen(){
         this.app.listen(this.port, () => {
-            console.log('listening on port ${port}')
+            console.log(`listening on port ${this.port}`)
         })
     }
 }
