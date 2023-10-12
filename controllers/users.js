@@ -13,16 +13,38 @@ const listUsers = async (req = request, res = response) => {
                 throw err;
             }
         })
-        res.json(users)
+        res.json(users);
     } catch (error){
         console.log(error);
-        res.status(500).json(error)
+        res.status(500).json(error);
     } finally{
         if (conn){
             conn.end()
         }
     }
-    
 }
 
-module.exports = listUsers
+const listUsersByID = async (req = request, res = response) => {
+    const {id} = req.params;
+    let conn;
+
+    try{
+        conn =  await pool.getConnection();
+
+        const user = await conn.query(usersModel.getByID, [id] ,(err)=>{
+            if (err){
+                throw err;
+            }
+        })
+        res.json(user);
+    } catch (error){
+        console.log(error);
+        res.status(500).json(error);
+    } finally{
+        if (conn){
+            conn.end();
+        }
+    }
+}
+
+module.exports = {listUsers, listUsersByID}
