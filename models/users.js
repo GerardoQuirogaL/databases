@@ -31,7 +31,7 @@ const usersModel = {
     `,
     addRow:`
     INSERT INTO
-        user {
+        users (
             username,
             password,
             email,
@@ -40,7 +40,7 @@ const usersModel = {
             phonenumber,
             role_id,
             is_active
-        } VALUES {
+        ) VALUES (
             ?,
             ?,
             ?,
@@ -48,10 +48,20 @@ const usersModel = {
             ?,
             ?,
             ?,
-            ?,
-        }
+            ?
+        )
     `,
-    
+    updateRow:`
+        pendiente
+    `,
+    deleteRow: `
+            UPDATE
+                Users
+            SET
+                is_active = 0
+            WHERE
+                id = ?
+    `,
 }
 
 module.exports = usersModel;
