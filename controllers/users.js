@@ -116,9 +116,53 @@ const addUser = async (req = request, res = response) =>{
 }
 
 //Aqui va la para actualizar un usuario si existe
-
-const userAdded = async (req = request, res = response) =>{
-    //pendiente
+const updateUser = async (req = request, res = response) =>{
+    const {id} = req.params;
+        const {
+          username,
+          password,
+          email,
+          name,
+          lastname,
+          phonenumber = '',
+          role_id,
+          is_active = 1
+        } = req.body;
+      
+        if (!username || !password || !email || !name || !lastname || !role_id) {
+          res.status(400).json({ msg: 'Missing information' });
+          return;
+        }
+      
+        const user = [username, password, email, name, lastname, phonenumber, role_id, is_active];
+      
+        let conn;
+      
+        try {
+          conn = await pool.getConnection();
+      
+          // Verificar si el usuario con el ID dado existe
+          const [usernameExists] = await conn.query(usersModel.getByID, [id], (err) => {
+            if (err) throw err;
+          });
+      
+          if (usernameExists) {
+            res.status(404).json({ msg: `User with ID ${id} not found` });
+            return;
+          }
+      
+          // Actualizar los datos del usuario
+          const updateUser = await conn.query(usersModel.updateRow, [...user] [id], (err) => {
+            if (err) throw err;
+          });
+      
+          res.json({ msg: 'User updated successfully' });
+        } catch (error) {
+          console.log(error);
+          res.status(500).json(error);
+        } finally {
+          if (conn) conn.end();
+        }
 }
 
 const deleteUser = async (req = request, res = response) =>{
@@ -152,6 +196,6 @@ const deleteUser = async (req = request, res = response) =>{
     }
 }
 
-module.exports = {listUsers, listUsersByID, addUser, deleteUser}
+module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser}
 
 // routes       controllers       models(DB)
