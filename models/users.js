@@ -55,14 +55,14 @@ const usersModel = {
     UPDATE
         Users
     SET
-        username = ,
-        password = ,
-        email = ,
-        name = ,
-        lastname = ,
-        phonenumber = ,
-        role_id = ,
-        is_active = 
+        username = ?,
+        password = ?,
+        email = ?,
+        name = ?,
+        lastname = ?,
+        phonenumber = ?,
+        role_id = ?,
+        is_active = ?
     WHERE
         id = ?
 `,
