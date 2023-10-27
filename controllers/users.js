@@ -1,4 +1,5 @@
 const {request, response} = require('express');
+const bcrypt = require('bcrypt');
 const usersModel = require('../models/users');
 const pool = require('../db');
 
@@ -75,7 +76,10 @@ const addUser = async (req = request, res = response) =>{
         return;
     }
 
-    const user = [username,password,email,name,lastname,phonenumber,role_id,is_active];
+    const saltRounds = 10;
+    const passwordHash = await bcrypt.hash(password, saltRounds);
+
+    const user = [username,passwordHash,email,name,lastname,phonenumber,role_id,is_active];
 
     let conn;
 
@@ -132,9 +136,20 @@ const updateUser = async (req = request, res = response) => {
 
     const { id } = req.params;
 
+    if (isNaN(id)){
+        res.status(400).json ({msg: `The ID ${id} is invalid`});
+        return;
+    }
+    
+    let passwordHash;
+    if (password){
+        const saltRounds = 10;
+        passwordHash = await bcrypt.hash(password, saltRounds);
+    }
+
     let userNewData = [
         username,
-        password,
+        passwordHash,
         email,
         name,
         lastname,
@@ -217,6 +232,11 @@ const deleteUser = async (req = request, res = response) =>{
     let conn;
     const {id} = req.params;
 
+    if (isNaN(id)){
+        res.status(400).json ({msg: `The ID ${id} is invalid`});
+        return;
+    }
+
     try{
         conn = await pool.getConnection();
         const [usersExists] = await conn.query(usersModel.getByID,[id], (err) =>{
@@ -244,6 +264,59 @@ const deleteUser = async (req = request, res = response) =>{
     }
 }
 
-module.exports = {listUsers, listUsersByID, addUser, updateUser ,deleteUser}
+//
+const signInuser = async (req = request, res = response) =>{
+    let conn;
+
+    const {username, password} = req.body;
+
+    try {
+    conn  = await pool.getConnection();
+
+        if (!username || !password){
+            res.status(400).json({msg: 'You must send Username and password'});
+            return;
+        }
+    
+        const [user] =  await conn.query(usersModel.getByUsername, 
+            [username], 
+            (err) => {
+            if(err)throw err;
+        });
+    
+        if (!user){
+            res.status(404).json({msg: `Wrong username or password`});
+            return;
+        }
+    
+        const passwordOk = await bcrypt.compare(password, user.password);
+    
+        if(!passwordOk){
+            res.status(404).json({msg: `Wrong username or password`});
+            return;
+        }
+
+        delete(user.password);
+        delete(user.create_at);
+        delete(user.updated_at);
+
+        res.json(user);
+
+    }catch(error){
+        console.log(error);
+        res.status(500).json(error);
+    }finally{
+        if (conn) conn.end();
+    }
+}
+
+module.exports = {
+    listUsers, 
+    listUsersByID, 
+    addUser, 
+    updateUser,
+    deleteUser,
+    signInuser
+    }
 
 // routes       controllers       models(DB)
